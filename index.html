@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    #partitura-container {
+      width: 100%;
+      height: 200px;
+      border: 1px solid #ddd;
+    }
+    .g-clef path { stroke: #000; stroke-width: 2; }
+    .f-clef path { stroke: #000; stroke-width: 1.5; }
+  </style>
+</head>
+<body>
+  <div id="partitura-container"></div>
+  <script src="partitura.js"></script>
+  <script>
+    (async () => {
+      const partitura = new Partitura('partitura-container');
+      //await partitura.addClef('G', scale = 0.405); 
+      await partitura.addClef('F', scale = 0.145); 
+      //await partitura.addClef('C', scale = 0.405);  -> Todo
+      partitura.addNote(150, 0, 'quarter'); 
+      partitura.addNote(150, 3, 'quarter'); 
+    })();
+  </script>
+</body>
+</html>
