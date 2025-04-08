@@ -115,4 +115,55 @@ async addClef(type = 'G', scale = .345) {
     console.error('Erro ao carregar a clave:', error);
   }
 }
+
+addKeySignature(tonality) {
+    const TONES = {
+        'DOM': [[], ''], // Dó maior não tem acidentes
+        'SOLM': [[4], '#'], // FÁ (posição 4) vira FÁ#
+        'REM': [[4, 1], '#'], // FÁ (4) e DÓ (1) viram sustenidos
+        'LAM': [[4, 1, 5], '#'], // FÁ (4), DÓ (1), SOL (5)
+        'MIM': [[4, 1, 5, 2], '#'], // FÁ (4), DÓ (1), SOL (5), RÉ (2)
+        'SIM': [[4, 1, 5, 2, 6], '#'], // FÁ (4), DÓ (1), SOL (5), RÉ (2), LÁ (6)
+        'FA#M': [[4, 1, 5, 2, 6, 3], '#'], // FÁ (4), DÓ (1), SOL (5), RÉ (2), LÁ (6), MI (3)
+        'DO#M': [[4, 1, 5, 2, 6, 3, 0], '#'], // FÁ (4), DÓ (1), SOL (5), RÉ (2), LÁ (6), MI (3), SI (0)
+        'FAM': [[0], 'b'], // SI (posição 0) vira SIb
+        'SIbM': [[0, 3], 'b'], // SI (0) e MI (3) viram bemóis
+        'MIbM': [[0, 3, 6], 'b'], // SI (0), MI (3), LÁ (6)
+        'LAbM': [[0, 3, 6, 2], 'b'], // SI (0), MI (3), LÁ (6), RÉ (2)
+        'REbM': [[0, 3, 6, 2, 5], 'b'], // SI (0), MI (3), LÁ (6), RÉ (2), SOL (5)
+        'SOLbM': [[0, 3, 6, 2, 5, 1], 'b'], // SI (0), MI (3), LÁ (6), RÉ (2), SOL (5), DÓ (1)
+        'DObM': [[0, 3, 6, 2, 5, 1, 4], 'b'] // SI (0), MI (3), LÁ (6), RÉ (2), SOL (5), DÓ (1), FÁ (4)
+    };
+
+    const { lineSpacing } = this.options;
+    const centerY = this.options.height / 2;
+    const startX = 100; 
+    
+    if (!TONES[tonality]) {
+        console.error('Tonalidade não encontrada:', tonality);
+        return;
+    }
+
+    const [positions, accidentalType] = TONES[tonality];
+    
+    if (positions.length === 0) {
+        return;
+    }
+
+    const accidentalSVGPath = `assets/clef/${accidentalType === '#' ? 'sharp' : 'bemol'}.svg`;
+    
+    positions.forEach((position, index) => {
+        const y = centerY - (position * lineSpacing / 2);
+        const x = startX + (index * 15);
+        
+        const accidental = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        accidental.setAttribute('href', accidentalSVGPath);
+        accidental.setAttribute('x', x);
+        accidental.setAttribute('y', y - 13); 
+        accidental.setAttribute('width', '15');
+        accidental.setAttribute('height', '25');
+        this.svg.appendChild(accidental);
+    });
+}
+
 }
