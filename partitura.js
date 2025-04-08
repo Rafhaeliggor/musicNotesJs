@@ -166,4 +166,83 @@ addKeySignature(tonality) {
     });
 }
 
+drawScaleNotes(tonality, startX = 50) {
+    const SCALE_NOTES = {
+        'DOM': ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
+        'SOLM': ['G', 'A', 'B', 'C', 'D', 'E', 'F#'],
+        'REM': ['D', 'E', 'F#', 'G', 'A', 'B', 'C#'],
+        'LAM': ['A', 'B', 'C#', 'D', 'E', 'F#', 'G#'],
+        'MIM': ['E', 'F#', 'G#', 'A', 'B', 'C#', 'D#'],
+        'SIM': ['B', 'C#', 'D#', 'E', 'F#', 'G#', 'A#'],
+        'FA#M': ['F#', 'G#', 'A#', 'B', 'C#', 'D#', 'E#'],
+        'DO#M': ['C#', 'D#', 'E#', 'F#', 'G#', 'A#', 'B#'],
+        'FAM': ['F', 'G', 'A', 'Bb', 'C', 'D', 'E'],
+        'SIbM': ['Bb', 'C', 'D', 'Eb', 'F', 'G', 'A'],
+        'MIbM': ['Eb', 'F', 'G', 'Ab', 'Bb', 'C', 'D'],
+        'LAbM': ['Ab', 'Bb', 'C', 'Db', 'Eb', 'F', 'G'],
+        'REbM': ['Db', 'Eb', 'F', 'Gb', 'Ab', 'Bb', 'C'],
+        'SOLbM': ['Gb', 'Ab', 'Bb', 'Cb', 'Db', 'Eb', 'F'],
+        'DObM': ['Cb', 'Db', 'Eb', 'Fb', 'Gb', 'Ab', 'Bb']
+    };
+
+    const NOTE_POSITIONS = {
+        'C': -6, 'C#': -6, 'Db': -6, 'B#': -6, 'Cb': -5,
+        'D': -5, 'D#': -5, 'Eb': -5, 'C##': -5, 'Db': -5,
+        'E': -4, 'E#': -4, 'Fb': -4, 'D##': -4, 'Eb': -4,
+        'F': -3, 'F#': -3, 'Gb': -3, 'E#': -3, 'Fb': -3,
+        'G': -2, 'G#': -2, 'Ab': -2, 'F##': -2, 'Gb': -2,
+        'A': -1, 'A#': -1, 'Bb': -1, 'G##': -1, 'Ab': -1,
+        'B': 0, 'B#': 0, 'Cb': 0, 'A##': 0, 'Bb': 0
+    };
+
+    const { lineSpacing } = this.options;
+    const centerY = this.options.height / 2;
+    const noteSpacing = 30;
+    const accidentalOffsetX = -15;
+    const accidentalOffsetY = -12;
+    const accidentalWidth = 15;
+    const accidentalHeight = 25;
+    const octaveSpan = 7; 
+
+    if (!SCALE_NOTES[tonality]) {
+        console.error('Tonalidade não encontrada:', tonality);
+        return;
+    }
+
+    const scaleNotes = SCALE_NOTES[tonality];
+    
+    const tonicNote = scaleNotes[0];
+    const tonicNatural = tonicNote.replace(/[#b]/, '');
+    let basePosition = NOTE_POSITIONS[tonicNatural];
+    
+    scaleNotes.forEach((note, index) => {
+        const x = startX + (index * noteSpacing);
+        const hasAccidental = note.includes('#') || note.includes('b');
+        const naturalNote = note.replace(/[#b]/, '');
+        
+        let position = basePosition + index;
+        
+        if (position >= octaveSpan) {
+            position -= octaveSpan;
+        }
+        
+        const y = centerY - (position * lineSpacing / 2);
+        
+        if (hasAccidental) {
+            const accidentalType = note.includes('#') ? 'sharp' : 'bemol';
+            const accidentalSVGPath = `assets/clef/${accidentalType}.svg`;
+            
+            const accidental = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+            accidental.setAttribute('href', accidentalSVGPath);
+            accidental.setAttribute('x', x + accidentalOffsetX);
+            accidental.setAttribute('y', y + accidentalOffsetY);
+            accidental.setAttribute('width', accidentalWidth);
+            accidental.setAttribute('height', accidentalHeight);
+            this.svg.appendChild(accidental);
+        }
+        
+        this.addNote(x, position, 'quarter');
+    });
+}
+
 }
