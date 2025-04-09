@@ -235,12 +235,113 @@ drawScaleNotes(tonality, startX = 50) {
             const accidental = document.createElementNS('http://www.w3.org/2000/svg', 'image');
             accidental.setAttribute('href', accidentalSVGPath);
             accidental.setAttribute('x', x + accidentalOffsetX);
-            accidental.setAttribute('y', y + accidentalOffsetY);
+            accidental.setAttribute('y', y + accidentalOffsetY - 6);
             accidental.setAttribute('width', accidentalWidth);
             accidental.setAttribute('height', accidentalHeight);
             this.svg.appendChild(accidental);
         }
         
+        this.addNote(x, position, 'quarter');
+    });
+}
+
+drawChordFromScale(tonality, chordType = 'major', startX = 50) {
+    // Dicionários de escalas (mantidos do seu código)
+    const SCALE_NOTES = {
+        'DOM': ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
+        'SOLM': ['G', 'A', 'B', 'C', 'D', 'E', 'F#'],
+        'REM': ['D', 'E', 'F#', 'G', 'A', 'B', 'C#'],
+        'LAM': ['A', 'B', 'C#', 'D', 'E', 'F#', 'G#'],
+        'MIM': ['E', 'F#', 'G#', 'A', 'B', 'C#', 'D#'],
+        'SIM': ['B', 'C#', 'D#', 'E', 'F#', 'G#', 'A#'],
+        'FA#M': ['F#', 'G#', 'A#', 'B', 'C#', 'D#', 'E#'],
+        'DO#M': ['C#', 'D#', 'E#', 'F#', 'G#', 'A#', 'B#'],
+        'FAM': ['F', 'G', 'A', 'Bb', 'C', 'D', 'E'],
+        'SIbM': ['Bb', 'C', 'D', 'Eb', 'F', 'G', 'A'],
+        'MIbM': ['Eb', 'F', 'G', 'Ab', 'Bb', 'C', 'D'],
+        'LAbM': ['Ab', 'Bb', 'C', 'Db', 'Eb', 'F', 'G'],
+        'REbM': ['Db', 'Eb', 'F', 'Gb', 'Ab', 'Bb', 'C'],
+        'SOLbM': ['Gb', 'Ab', 'Bb', 'Cb', 'Db', 'Eb', 'F'],
+        'DObM': ['Cb', 'Db', 'Eb', 'Fb', 'Gb', 'Ab', 'Bb']
+    };
+
+    const SCALE_NOTES_RELATIVE_MINOR = {
+        'Am': ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+        'Em': ['E', 'F#', 'G', 'A', 'B', 'C', 'D'],
+        'Bm': ['B', 'C#', 'D', 'E', 'F#', 'G', 'A'],
+        'F#m': ['F#', 'G#', 'A', 'B', 'C#', 'D', 'E'],
+        'C#m': ['C#', 'D#', 'E', 'F#', 'G#', 'A', 'B'],
+        'G#m': ['G#', 'A#', 'B', 'C#', 'D#', 'E', 'F#'],
+        'D#m': ['D#', 'E#', 'F#', 'G#', 'A#', 'B', 'C#'],
+        'A#m': ['A#', 'B#', 'C#', 'D#', 'E#', 'F#', 'G#'],
+        'Dm': ['D', 'E', 'F', 'G', 'A', 'Bb', 'C'],
+        'Gm': ['G', 'A', 'Bb', 'C', 'D', 'Eb', 'F'],
+        'Cm': ['C', 'D', 'Eb', 'F', 'G', 'Ab', 'Bb'],
+        'Fm': ['F', 'G', 'Ab', 'Bb', 'C', 'Db', 'Eb'],
+        'Bbm': ['Bb', 'C', 'Db', 'Eb', 'F', 'Gb', 'Ab'],
+        'Ebm': ['Eb', 'F', 'Gb', 'Ab', 'Bb', 'Cb', 'Db'],
+        'Abm': ['Ab', 'Bb', 'Cb', 'Db', 'Eb', 'Fb', 'Gb']
+    };
+
+    // Combina ambos os dicionários
+    const ALL_SCALES = {...SCALE_NOTES, ...SCALE_NOTES_RELATIVE_MINOR};
+
+    // Posições das notas (mantido do seu código)
+    const NOTE_POSITIONS = {
+        'C': -6, 'C#': -6, 'Db': -6, 'B#': -6, 'Cb': -5,
+        'D': -5, 'D#': -5, 'Eb': -5, 'C##': -5, 'Db': -5,
+        'E': -4, 'E#': -4, 'Fb': -4, 'D##': -4, 'Eb': -4,
+        'F': -3, 'F#': -3, 'Gb': -3, 'E#': -3, 'Fb': -3,
+        'G': -2, 'G#': -2, 'Ab': -2, 'F##': -2, 'Gb': -2,
+        'A': -1, 'A#': -1, 'Bb': -1, 'G##': -1, 'Ab': -1,
+        'B': 0, 'B#': 0, 'Cb': 0, 'A##': 0, 'Bb': 0
+    };
+
+    // Configurações de desenho
+    const { lineSpacing } = this.options;
+    const centerY = this.options.height / 2;
+    const accidentalOffsetX = -15;
+    const accidentalOffsetY = -12;
+
+    // Verifica se a tonalidade existe
+    if (!ALL_SCALES[tonality]) {
+        console.error('Tonalidade não encontrada:', tonality);
+        return;
+    }
+
+    // Pega as notas da escala
+    const scaleNotes = ALL_SCALES[tonality];
+    
+    // Determina as notas do acorde baseado no tipo
+    let chordNotes = [];
+    if (chordType === 'major') {
+        // Acorde maior: 1ª, 3ª e 5ª notas da escala maior
+        chordNotes = [scaleNotes[0], scaleNotes[2], scaleNotes[4]];
+    } else if (chordType === 'minor') {
+        // Acorde menor: 1ª, 3ª menor (2 semitons acima) e 5ª
+        chordNotes = [scaleNotes[0], scaleNotes[2], scaleNotes[4]];
+    }
+
+    // Desenha as notas do acorde (todas no mesmo X)
+    chordNotes.forEach((note, index) => {
+        const x = startX + 20;
+        const naturalNote = note.replace(/[#b]/, '');
+        const position = NOTE_POSITIONS[naturalNote];
+        const y = centerY - (position * lineSpacing / 2);
+        
+        // Desenha acidente se necessário
+        if (note.includes('#') || note.includes('b')) {
+            const accType = note.includes('#') ? 'sharp' : 'bemol';
+            const acc = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+            acc.setAttribute('href', `assets/clef/${accType}.svg`);
+            acc.setAttribute('x', x + accidentalOffsetX);
+            acc.setAttribute('y', y + accidentalOffsetY);
+            acc.setAttribute('width', '15');
+            acc.setAttribute('height', '25');
+            this.svg.appendChild(acc);
+        }
+
+        // Desenha a nota (com pequeno deslocamento horizontal para evitar sobreposição)
         this.addNote(x, position, 'quarter');
     });
 }
