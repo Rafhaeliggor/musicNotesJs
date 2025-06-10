@@ -44,11 +44,49 @@ class Partitura {
     }
   }
 
-    addNote(x, pitch, type = 'quarter') {
-    const { lineSpacing } = this.options;
-    const centerY = this.options.height / 2;
+    addLedgerLine(x, y, length = 15) {
+      const { lineColor, lineWidth } = this.options;
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', x - (length * 0.6));
+      line.setAttribute('y1', y);
+      line.setAttribute('x2', x + (length));
+      line.setAttribute('y2', y);
+      line.setAttribute('stroke', lineColor);
+      line.setAttribute('stroke-width', lineWidth);
+      this.svg.appendChild(line);
+    }
+
+
+addNote(x, pitch, type = 'quarter') {
+    const { lineSpacing, height } = this.options;
+    const centerY = height / 2;
+    // Ajuste no cálculo da posição Y da nota
     const y = centerY - (pitch * lineSpacing / 2);
 
+    // Verifica se a nota está fora da pauta e adiciona linhas suplementares se necessário
+    const staffTop = centerY - (2 * lineSpacing); // Posição Y da linha superior
+    const staffBottom = staffTop + (4 * lineSpacing); // Posição Y da linha inferior
+    
+    // Se a nota está acima da pauta
+    if (y < staffTop) {
+        // Calcula quantas linhas suplementares são necessárias
+        const linesAbove = Math.ceil((staffTop - y) / lineSpacing);
+        for (let i = 1; i <= linesAbove; i++) {
+            const ly = staffTop - (i * lineSpacing);
+            this.addLedgerLine(x, ly);
+        }
+    }
+    // Se a nota está abaixo da pauta
+    else if (y > staffBottom) {
+        // Calcula quantas linhas suplementares são necessárias
+        const linesBelow = Math.ceil((y - staffBottom) / lineSpacing);
+        for (let i = 1; i <= linesBelow; i++) {
+            const ly = staffBottom + (i * lineSpacing);
+            this.addLedgerLine(x, ly);
+        }
+    }
+
+    // Desenha a cabeça da nota
     const noteHead = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
     noteHead.setAttribute('cx', x + 4);
     noteHead.setAttribute('cy', y);
@@ -57,19 +95,22 @@ class Partitura {
     noteHead.setAttribute('fill', '#000');
     this.svg.appendChild(noteHead);
 
+    // Adiciona leve inclinação
     noteHead.setAttribute('transform', `rotate(${5}, ${x}, ${y})`);
 
+    // Desenha a haste se não for uma semibreve
     if (type !== 'whole') {
         const stem = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         stem.setAttribute('x1', x + 10);  
         stem.setAttribute('y1', y);
         stem.setAttribute('x2', x + 10);
-        stem.setAttribute('y2', y - 30);
+        // Ajuste no comprimento da haste
+        stem.setAttribute('y2', y - (pitch >= 0 ? 30 : -30)); // Direção da haste depende da posição
         stem.setAttribute('stroke', '#000');
         stem.setAttribute('stroke-width', 2);
         this.svg.appendChild(stem);
     }
-    }
+}
 
 async addClef(type = 'G', scale = .345) {
   const clefFiles = {
